@@ -2,6 +2,8 @@ const router = require("express").Router();
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const auth = require("../middleware/auth");
+const { json } = require("express");
 
 // async because we are saving to mongodb and that's an async operation
 router.post("/register", async (req, res) => {
@@ -100,4 +102,33 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.delete("/delete", auth, async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.user);
+    res.json(deletedUser);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+});
+
+// route to just provide boolean values for certain conditions relating to the token
+router.post("/tokenIsValid", async (req, res) => {
+  try {
+    const token = req.header("auth-token");
+
+    if (!token) return res.json(false);
+
+    const verified = jwt.verify(token, process.env.JWT_Secret);
+
+    if (!verified) return res.json(false);
+
+    const user = await User.findById(verified.id);
+
+    if (!user) return res.json(false);
+
+    return res.json(true);
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+});
 module.exports = router;
