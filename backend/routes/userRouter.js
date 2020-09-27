@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 // async because we are saving to mongodb and that's an async operation
 router.post("/register", async (req, res) => {
@@ -54,6 +55,48 @@ router.post("/register", async (req, res) => {
   } catch (err) {
     //internal server error
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    //validate
+    if (!email || !password)
+      return res.status(400).json({ msg: "not all fields have been entered" });
+
+    // find user in database
+    const user = await User.findOne({ email: email });
+
+    // handle if user is not found in database
+    if (!user)
+      return res
+        .status(400)
+        .json({ msg: "no account with this email has been register" });
+
+    // compare the client password to password stored in database
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    // Incorrect password handling
+    if (!isMatch) return res.status(400).json({ msg: "invalid credentials" });
+
+    // create token if passwords match that stores users id. Verify token with password we create
+    const token = jwt.sign({ id: user._id }, process.env.JWT_Secret);
+
+    // if successful login send back token and user info to front end
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        displayName: user.displayName,
+        email: user.email,
+      },
+    });
+
+    // error handling
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
   }
 });
 
