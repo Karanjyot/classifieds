@@ -16,22 +16,22 @@ router.post("/register", async (req, res) => {
 
     if (!email || !password || !passwordCheck)
       // 400 = bad request
-      return res.status(400).json({ msg: "not all fields have been entered" });
+      return res.status(400).json({ msg: "Not all fields have been entered." });
 
     if (password.length < 5)
       return res
         .status(400)
-        .json({ msg: "password needs to be atleast 5 characters long" });
+        .json({ msg: "Password needs to be atleast 5 characters long." });
 
     if (password !== passwordCheck)
-      return res.status(400).json({ msg: "passwords do not match" });
+      return res.status(400).json({ msg: "Passwords do not match." });
 
     const existingUser = await User.findOne({ email: email });
 
     if (existingUser)
       return res
         .status(400)
-        .json({ msg: "An account with this email already exists" });
+        .json({ msg: "An account with this email already exists." });
 
     if (!displayName) displayName = email;
 
@@ -66,7 +66,7 @@ router.post("/login", async (req, res) => {
 
     //validate
     if (!email || !password)
-      return res.status(400).json({ msg: "not all fields have been entered" });
+      return res.status(400).json({ msg: "Not all fields have been entered." });
 
     // find user in database
     const user = await User.findOne({ email: email });
@@ -75,13 +75,13 @@ router.post("/login", async (req, res) => {
     if (!user)
       return res
         .status(400)
-        .json({ msg: "no account with this email has been register" });
+        .json({ msg: "No account with this email has been register." });
 
     // compare the client password to password stored in database
     const isMatch = await bcrypt.compare(password, user.password);
 
     // Incorrect password handling
-    if (!isMatch) return res.status(400).json({ msg: "invalid credentials" });
+    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials." });
 
     // create token if passwords match that stores users id. Verify token with password we create
     const token = jwt.sign({ id: user._id }, process.env.JWT_Secret);

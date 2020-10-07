@@ -2,12 +2,14 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import UserContext from "../../context/userContext";
 import { useHistory } from "react-router-dom";
+import ErrorNotice from "../../components/ErrorNotice/ErrorNotice";
 
 function Signup() {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [passwordCheck, setPasswordCheck] = useState();
   const [displayName, setDisplayName] = useState();
+  const [error, setError] = useState();
 
   //destructure
   const { setUserData } = useContext(UserContext);
@@ -16,23 +18,36 @@ function Signup() {
 
   const submit = async (e) => {
     e.preventDefault();
-    // create a newUser object
-    const newUser = { email, password, passwordCheck, displayName };
 
-    await axios.post("http://localhost:5000/users/register", newUser);
+    try {
+      // create a newUser object
+      const newUser = { email, password, passwordCheck, displayName };
 
-    const loginRes = await axios.post("http://localhost:5000/users/login", {
-      email,
-      password,
-    });
+      await axios.post("http://localhost:5000/users/register", newUser);
 
-    setUserData({ token: loginRes.data.token, user: loginRes.data.user });
-    localStorage.setItem("auth-token", loginRes.data.token);
-    history.push("/");
+      const loginRes = await axios.post("http://localhost:5000/users/login", {
+        email,
+        password,
+      });
+
+      setUserData({ token: loginRes.data.token, user: loginRes.data.user });
+      localStorage.setItem("auth-token", loginRes.data.token);
+      history.push("/");
+    } catch (err) {
+      // if msg exists in error set the error to it
+      if (err.response.data.msg) {
+        setError(err.response.data.msg);
+      }
+    }
   };
 
   return (
     <form className="login-form" onSubmit={submit}>
+      {/* if error exist display error notice. Pass props to Error notice to display
+      message and clear message */}
+      {error ? (
+        <ErrorNotice message={error} clearError={() => setError(undefined)} />
+      ) : null}
       <div className="form-group">
         <label htmlFor="exampleInputEmail1">Email address</label>
         <input
@@ -76,7 +91,6 @@ function Signup() {
           }}
         />
       </div>
-
       <button type="submit" className="btn btn-primary">
         Register
       </button>

@@ -27,7 +27,7 @@ function Navbar() {
           {/* if user is logged in then display logout otherwise display signup/login */}
           {userData.user ? (
             <li className="nav-item active">
-              <Link to="/" className="nav-link" onClick={logout}>
+              <Link to="/login" className="nav-link" onClick={logout}>
                 Logout
               </Link>
             </li>
